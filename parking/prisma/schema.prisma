@@ -1,0 +1,54 @@
+datasource db {
+  provider = "sqlite"  // Type de base de données
+  url      = "file:../parking.sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model cities {
+  id       Int      @id @default(autoincrement()) // Clé primaire
+  name     String
+  slug     String   @unique
+  country  String
+  location String
+  parkings parkings[] // Relation avec Parking
+}
+
+
+model parkings {
+  id            Int     @id @default(autoincrement())
+  name          String
+  location      String
+  numberOfSpots Int 
+  opened        Boolean
+  hourlyRate    Float
+  city_id       Int    // Permettre à city_id d'être NULL
+  city          cities? @relation(fields: [city_id], references: [id]) // La relation avec city est optionnelle
+  spots         spots[]
+}
+
+
+model parks {
+  id                String   @id @default(uuid()) // Identifiant unique pour Park
+  startedAt         DateTime // Date et heure du début du stationnement
+  endedAt           DateTime? // Date et heure de la fin du stationnement (peut être NULL)
+  vehicleNumberPlate String  // Numéro de la plaque du véhicule
+  price             Float    @default(0) // Prix du stationnement
+  spot_id           Int      // Clé étrangère vers `Spot`
+  
+  spot              spots     @relation(fields: [spot_id], references: [id]) // Relation avec Spot
+
+  @@index([spot_id]) // Index sur `spot_id`
+}
+
+model spots {
+  id         Int     @id @default(autoincrement()) // Identifiant unique pour Spot
+  parking_id  Int     // Clé étrangère vers Parking
+  parking    parkings @relation(fields: [parking_id], references: [id]) // Relation avec Parking
+
+  parks      parks[]  // Relation inverse avec Park (un Spot peut avoir plusieurs Park)
+}
+
+
